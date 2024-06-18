@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to Audio Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        h1 {
+            color: #333;
+        }
+        form {
+            margin: 20px 0;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input[type="file"], textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>PDF to Audio Converter</h1>
+    <form id="pdfForm" enctype="multipart/form-data">
+        <label for="pdf_file">Choose PDF file:</label>
+        <input type="file" id="pdf_file" name="pdf_file" accept="application/pdf" required>
+        <button type="button" onclick="extractText()">Extract Text</button>
+    </form>
+    <form id="audioForm" class="hidden">
+        <label for="extracted_text">Extracted Text:</label>
+        <textarea id="extracted_text" name="extracted_text" rows="10" cols="30"></textarea>
+        <button type="button" onclick="generateAudio()">Generate Audio</button>
+    </form>
+    <div id="downloadLink" class="hidden">
+        <a href="#" id="audioDownload" download="output.mp3">Download Audio</a>
+    </div>
+
+    <script>
+        async function extractText() {
+            const form = document.getElementById('pdfForm');
+            const formData = new FormData(form);
+            const response = await fetch('/extract_text', {
+                method: 'POST',
+                body: formData
+            });
+            const text = await response.text();
+            document.getElementById('extracted_text').value = text;
+            document.getElementById('audioForm').classList.remove('hidden');
+        }
+
+        async function generateAudio() {
+            const text = document.getElementById('extracted_text').value;
+            const formData = new FormData();
+            formData.append('extracted_text', text);
+            const response = await fetch('/generate_audio', {
+                method: 'POST',
+                body: formData
+            });
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const link = document.getElementById('audioDownload');
+            link.href = url;
+            document.getElementById('downloadLink').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
